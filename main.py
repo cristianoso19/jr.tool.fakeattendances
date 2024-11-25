@@ -223,7 +223,7 @@ supabase: Client = create_client(url, key)
 
 # Probar conexión: Leer datos de una tabla
 try:
-    response = supabase.table("nombre_de_tu_tabla").select("*").limit(1).execute()
+    response = supabase.table("employees").select("*").limit(1).execute()
     if response.data:
         print("¡Conexión exitosa! Aquí está una muestra de tus datos:")
         print(response.data)
