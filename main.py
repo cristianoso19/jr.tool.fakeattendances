@@ -88,28 +88,7 @@ def ajustar_horas_suplementarias(timestamps, horas_requeridas):
         raise ValueError("No hay suficientes días para ajustar todas las horas extras requeridas.")
 
     return timestamps
-# Ejemplo de uso:
-# Lista de días, cada uno con [Entrada Inicial, Salida Inicial, Entrada Inicial, Salida Final]
-# dias_timestamps = [
-#     [
-#         datetime(2024, 10, 1, 8, 5),  # Entrada Inicial
-#         datetime(2024, 10, 1, 12, 0),  # Salida Inicial
-#         datetime(2024, 10, 1, 13, 2),  # Entrada Inicial
-#         datetime(2024, 10, 1, 17, 15)  # Salida Final
-#     ],
-#     [
-#         datetime(2024, 10, 2, 8, 3),  # Entrada Inicial
-#         datetime(2024, 10, 2, 12, 2),  # Salida Inicial
-#         datetime(2024, 10, 2, 13, 4),  # Entrada Inicial
-#         datetime(2024, 10, 2, 17, 20)  # Salida Final
-#     ],
-#     [
-#         datetime(2024, 10, 3, 8, 0),  # Entrada Inicial
-#         datetime(2024, 10, 3, 12, 0),  # Salida Inicial
-#         datetime(2024, 10, 3, 13, 0),  # Entrada Inicial
-#         datetime(2024, 10, 3, 17, 10)  # Salida Final
-#     ]
-# ]
+
 
 def horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
     """
@@ -122,7 +101,7 @@ def horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
         mes (int): Mes para el que se generarán los horarios (1-12).
 
     Returns:
-        list: Lista de listas de timestamps por cada día que contiene los horarios generados.
+        list: Lista plana de timestamps generados.
     """
     if not dias_disponibles:
         raise ValueError("La lista de días disponibles no puede estar vacía.")
@@ -139,7 +118,7 @@ def horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
         horas_por_dia = 5  # Si no alcanzan, aumentar a 5 horas por día
 
     # Generar horarios
-    horarios_generados = []
+    timestamps = []
     horas_restantes = cantidad_horas
     for dia in dias_disponibles:
         if horas_restantes <= 0:
@@ -150,7 +129,7 @@ def horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
 
         # Entrada
         entrada = fecha.replace(hour=9, minute=0, second=0, microsecond=0)
-        entrada += timedelta(minutes=random.randint(-10, 2), seconds=random.randint(0, 59))
+        entrada += timedelta(minutes=random.randint(-6, 7), seconds=random.randint(0, 59))
 
         # Salida (ajustada según las horas restantes)
         if horas_restantes >= horas_por_dia:
@@ -161,44 +140,69 @@ def horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
             horas_restantes = 0
         
         # Aleatorizar la salida (sumar -2 a 3 minutos y 1-59 segundos)
-        salida += timedelta(minutes=random.randint(-2, 3), seconds=random.randint(1, 59))
+        salida += timedelta(minutes=random.randint(-2, 4), seconds=random.randint(1, 59))
 
-        horarios_generados.append([entrada, salida])
+        # Agregar los timestamps generados a la lista plana
+        timestamps.append(entrada)
+        timestamps.append(salida)
 
     if horas_restantes > 0:
         raise ValueError("No hay suficientes días disponibles para cubrir todas las horas extras.")
 
-    return horarios_generados
+    return timestamps
 
-# Ejemplo de uso:
-dias_disponibles = [5, 11, 12, 19, 26]  # Días específicos
-cantidad_horas = 12  # Total de horas extras requeridas
-mes = 10  # Octubre
+def unir_y_ordenar_timestamps(lista1, lista2):
+    """
+    Une dos listas planas de timestamps y las ordena por fecha.
 
-horarios = horas_extraordinarias(dias_disponibles, cantidad_horas, mes)
+    Args:
+        lista1 (list): Primera lista de timestamps (tipo datetime).
+        lista2 (list): Segunda lista de timestamps (tipo datetime).
 
-# Imprimir los resultados
-for dia_horarios in horarios:
-    print([str(h) for h in dia_horarios])
+    Returns:
+        list: Lista combinada y ordenada de timestamps.
+    """
+    # Combinar las listas
+    combinada = lista1 + lista2
     
-
+    # Ordenar la lista combinada
+    combinada.sort()
     
-    
+    return combinada
     
 # Ejemplo de uso:
 from datetime import date
 
-
 mes = 10  # Octubre
 fechas_a_evitar = [date(2024, 10, 11), date(2024, 10, 17), date(2024, 10, 18)]  # Fechas específicas a evitar
 
+print("Timestamps generados:")
 timestamps_octubre = generar_timestamps(mes, fechas_a_evitar)
 for ts in timestamps_octubre:
     print(ts)
+
+print("Timestamps suplementarios:")
 horas_requeridas = 3.5 # Total de horas extras requeridas
 dias_timestamps_actualizados = ajustar_horas_suplementarias(timestamps_octubre, horas_requeridas)
-print("Timestamps actualizados:")
 # Imprimir los resultados
 for ts in dias_timestamps_actualizados:
     print(ts)
 
+print("Timestamps extraordinarios:")
+# Ejemplo de uso extraordinarios:
+dias_disponibles = [5, 11, 12, 19, 26]  # Días específicos
+cantidad_horas = 12  # Total de horas extras requeridas
+mes = 10  # Octubre
+horarios = horas_extraordinarias(dias_disponibles, cantidad_horas, mes)
+# Imprimir los resultados
+for dia_horarios in horarios:
+    print(dia_horarios)
+    #print([str(h) for h in dia_horarios])
+
+
+print("Timestamps ordenados:")
+timestamps_ordenados = unir_y_ordenar_timestamps(dias_timestamps_actualizados, horarios)
+
+# Imprimir resultados
+for ts in timestamps_ordenados:
+    print(ts)
