@@ -1,5 +1,8 @@
 import random
 from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
 def generar_timestamps(mes, fechas_a_evitar=None):
     """
@@ -206,3 +209,26 @@ timestamps_ordenados = unir_y_ordenar_timestamps(dias_timestamps_actualizados, h
 # Imprimir resultados
 for ts in timestamps_ordenados:
     print(ts)
+
+
+# Cargar variables de entorno
+load_dotenv()
+
+# Obtener URL y clave de Supabase
+url: str = os.getenv("SUPABASE_URL")
+key: str = os.getenv("SUPABASE_KEY")
+
+# Crear cliente de Supabase
+supabase: Client = create_client(url, key)
+
+# Probar conexión: Leer datos de una tabla
+try:
+    response = supabase.table("nombre_de_tu_tabla").select("*").limit(1).execute()
+    if response.data:
+        print("¡Conexión exitosa! Aquí está una muestra de tus datos:")
+        print(response.data)
+    else:
+        print("¡Conexión exitosa, pero no hay datos en la tabla!")
+except Exception as e:
+    print("Error al conectar a Supabase:")
+    print(e)
