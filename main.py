@@ -1,27 +1,33 @@
 import random
 from datetime import datetime, timedelta
 
-def generar_timestamps(mes):
+def generar_timestamps(mes, fechas_a_evitar=None):
     """
-    Genera cuatro timestamps para cada día laboral de un mes especificado (lunes a viernes).
-    Los horarios son ajustados con un rango aleatorio de minutos y segundos según lo especificado.
+    Genera cuatro timestamps para cada día laboral de un mes especificado (lunes a viernes),
+    excluyendo los días especificados en `fechas_a_evitar`.
 
     Args:
         mes (int): Mes del que se generarán los timestamps (1-12).
+        fechas_a_evitar (list): Lista de fechas (tipo datetime.date) a evitar.
 
     Returns:
-        list: Lista de strings con los timestamps generados.
+        list: Lista de timestamps generados.
     """
     # Rango de minutos para cada horario
     rangos = {
         8: (-10, 2),  # 8 am
         12: (-2, 2),  # 12 pm
         13: (-2, 2),  # 1 pm
-        17: (-2, 2)   # 5 pm
+        17: (-1, 6)   # 5 pm
     }
     
     # Lista para almacenar los timestamps generados
     timestamps = []
+    
+    # Validar y preparar las fechas a evitar
+    if fechas_a_evitar is None:
+        fechas_a_evitar = []
+    fechas_a_evitar = set(fechas_a_evitar)  # Convertir a conjunto para búsqueda eficiente
     
     # Generar las fechas del mes
     year = datetime.now().year  # Año actual
@@ -30,8 +36,8 @@ def generar_timestamps(mes):
     current_date = start_date
     
     while current_date < end_date:
-        # Si es lunes a viernes
-        if current_date.weekday() < 5:  # weekday(): 0=Lunes, ..., 4=Viernes
+        # Si es lunes a viernes y no está en las fechas a evitar
+        if current_date.weekday() < 5 and current_date.date() not in fechas_a_evitar:
             for hour, (min_offset_start, min_offset_end) in rangos.items():
                 # Generar el offset aleatorio de minutos y segundos
                 minute_offset = random.randint(min_offset_start, min_offset_end)
@@ -44,11 +50,7 @@ def generar_timestamps(mes):
     
     return timestamps
 
-from datetime import timedelta
-
-
-
-def ajustar_horas_extras(timestamps, horas_requeridas):
+def ajustar_horas_suplementarias(timestamps, horas_requeridas):
     """
     Ajusta los timestamps de Salida Final distribuyendo las horas extras necesarias,
     sumando 2 horas por día y colocando el sobrante en el último día.
@@ -184,11 +186,18 @@ for dia_horarios in horarios:
     
     
 # Ejemplo de uso:
+from datetime import date
+
 
 mes = 10  # Octubre
-timestamps_octubre = generar_timestamps(mes)
+fechas_a_evitar = [date(2024, 10, 11), date(2024, 10, 17), date(2024, 10, 18)]  # Fechas específicas a evitar
+
+timestamps_octubre = generar_timestamps(mes, fechas_a_evitar)
+for ts in timestamps_octubre:
+    print(ts)
 horas_requeridas = 3.5 # Total de horas extras requeridas
-dias_timestamps_actualizados = ajustar_horas_extras(timestamps_octubre, horas_requeridas)
+dias_timestamps_actualizados = ajustar_horas_suplementarias(timestamps_octubre, horas_requeridas)
+print("Timestamps actualizados:")
 # Imprimir los resultados
 for ts in dias_timestamps_actualizados:
     print(ts)
