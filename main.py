@@ -1,8 +1,14 @@
 import random
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client
+import pandas as pd
+import locale
+
+locale.setlocale(locale.LC_TIME, 'es_ES.utf8')  # Para sistemas Unix/Linux
+
+
 
 def generar_timestamps(mes, fechas_a_evitar=None):
     """
@@ -93,7 +99,7 @@ def ajustar_horas_suplementarias(timestamps, horas_requeridas):
     return timestamps
 
 
-def horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
+def calcula_horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
     """
     Crea timestamps para los días específicos del mes proporcionados, con horarios de 9am a 1pm o ajustados a 5 horas
     si los días no son suficientes para cubrir las horas extras requeridas.
@@ -173,6 +179,69 @@ def unir_y_ordenar_timestamps(lista1, lista2):
     
     return combinada
 
+def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado):
+    """
+    Genera un archivo de Excel con los datos de marcación del empleado.
+
+    Args:
+        lista_timestamps (list): Lista plana de timestamps.
+        nombre_empleado (str): Nombre del empleado.
+        departamento (str): Departamento del empleado.
+        id_empleado (int): ID del empleado.
+
+    Returns:
+        str: Nombre del archivo Excel generado.
+    """
+    # Obtener el mes y año del primer timestamp (asumiendo todos son del mismo mes)
+    if not lista_timestamps:
+        raise ValueError("La lista de timestamps está vacía.")
+    mes = lista_timestamps[0].strftime("%B").upper()
+    anio = lista_timestamps[0].year
+
+    # Crear encabezado y nombre del archivo
+    encabezado = f"{nombre_empleado.replace(' ', '_')}_{mes}_{anio}"
+    nombre_archivo = f"{encabezado}.xlsx"
+
+    # Generar las columnas
+    datos = []
+    for i, timestamp in enumerate(lista_timestamps):
+        fecha = timestamp.strftime("%Y-%m-%d")
+        hora = timestamp.strftime("%H:%M:%S")
+        dia = timestamp.strftime("%A").capitalize()  # Obtener el día en español y capitalizar
+        tipo = "ENTRADA" if i % 2 == 0 else "SALIDA"
+
+        datos.append({
+            "ID": id_empleado,
+            "Nombre del empleado": nombre_empleado,
+            "Nombre de la empresa": "ZOENETV S.A.",
+            "DEPARTAMENTO": departamento,
+            "Día": dia,
+            "Fecha": fecha,
+            "Hora de marcacion": hora,
+            "Tipo de marcacion": tipo
+        })
+
+    # Convertir los datos a un DataFrame
+    df = pd.DataFrame(datos)
+
+    # Crear el Excel
+    with pd.ExcelWriter(nombre_archivo, engine="xlsxwriter") as writer:
+        # Escribir el DataFrame al archivo
+        df.to_excel(writer, index=False, sheet_name="Marcaciones")
+        
+        # Obtener el workbook y worksheet para escribir notas adicionales
+        workbook = writer.book
+        worksheet = writer.sheets["Marcaciones"]
+
+        # Añadir secciones de firma al final
+        max_row = len(df) + 3
+        worksheet.write(max_row, 0, "Firma del Empleado:")
+        worksheet.write(max_row + 2, 0, "Firma de Control:")
+
+    print(f"Archivo Excel generado: {nombre_archivo}")
+    return nombre_archivo
+
+'''
 def subir_timestamps_a_supabase(timestamps, id):
     """
     Sube una lista de timestamps a Supabase, asignando un id y un type (ENTRADA/SALIDA).
@@ -193,32 +262,42 @@ def subir_timestamps_a_supabase(timestamps, id):
         print("Datos subidos correctamente.")
     else:
         print(f"Error al subir los datos: {response.get('error')}")
-
+'''
     
 # Ejemplo de uso:
+nombre = input("Ingrese nombre del empleado: ")
+id_empleado = input("Ingrese id del empleado: ")
+departamento = input("Ingrese departamento del empleado: ")
+
+mes = int(input("Ingrese el mes (1-12): "))
+horas_suplementarias = int(input("Ingrese las horas suplementarias: "))
+dias_extraordinarias = input("Ingrese los días extraordinarios (seprado por comas): ")
+horas_extraordinarias = int(input("Ingrese las horas extraordinarias: "))
+# Convertir el string de días en una lista de enteros
+dias_extraordinarios = [int(dia.strip()) for dia in dias_extraordinarias.split(",")]
+print(dias_extraordinarios)
 from datetime import date
 
-mes = 10  # Octubre
-fechas_a_evitar = [date(2024, 10, 11), date(2024, 10, 17), date(2024, 10, 18)]  # Fechas específicas a evitar
+# Generar las fechas a evitar
+fechas_a_evitar = [date(2024, mes, diaext) for diaext in dias_extraordinarios]
+
 
 print("Timestamps generados:")
-timestamps_octubre = generar_timestamps(mes, fechas_a_evitar)
-for ts in timestamps_octubre:
+timestamps_generados = generar_timestamps(mes, fechas_a_evitar)
+for ts in timestamps_generados:
     print(ts)
 
 print("Timestamps suplementarios:")
-horas_requeridas = 12 # Total de horas extras requeridas
-dias_timestamps_actualizados = ajustar_horas_suplementarias(timestamps_octubre, horas_requeridas)
+dias_timestamps_actualizados = ajustar_horas_suplementarias(timestamps_generados, horas_suplementarias)
 # Imprimir los resultados
 for ts in dias_timestamps_actualizados:
     print(ts)
 
 print("Timestamps extraordinarios:")
 # Ejemplo de uso extraordinarios:
-dias_disponibles = [5, 11, 12, 19, 26]  # Días específicos
-cantidad_horas = 20  # Total de horas extras requeridas
-mes = 10  # Octubre
-horarios = horas_extraordinarias(dias_disponibles, cantidad_horas, mes)
+#dias_disponibles = [5, 11, 12, 19, 26]  # Días específicos
+#cantidad_horas = 20  # Total de horas extras requeridas
+horarios = calcula_horas_extraordinarias(dias_extraordinarias, horas_extraordinarias, mes)
 # Imprimir los resultados
 for dia_horarios in horarios:
     print(dia_horarios)
@@ -232,7 +311,10 @@ timestamps_ordenados = unir_y_ordenar_timestamps(dias_timestamps_actualizados, h
 for ts in timestamps_ordenados:
     print(ts)
 
+#generar excel
+generar_excel(timestamps_ordenados, nombre, departamento, id_empleado)
 
+'''
 # Cargar variables de entorno
 load_dotenv()
 
@@ -258,3 +340,4 @@ except Exception as e:
 id = 2  # ID común para todos los timestamps
 
 subir_timestamps_a_supabase(timestamps_ordenados, id)
+'''
