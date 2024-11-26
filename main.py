@@ -172,6 +172,28 @@ def unir_y_ordenar_timestamps(lista1, lista2):
     combinada.sort()
     
     return combinada
+
+def subir_timestamps_a_supabase(timestamps, id):
+    """
+    Sube una lista de timestamps a Supabase, asignando un id y un type (ENTRADA/SALIDA).
+
+    Args:
+        timestamps (list): Lista de objetos datetime que se subirán.
+        id (int): Identificador para asociar a los registros en la base de datos.
+    """
+    datos = []
+    for i, ts in enumerate(timestamps):
+        tipo = "ENTRADA" if i % 2 == 0 else "SALIDA"  # Asignar ENTRADA o SALIDA
+        datos.append({"employee_id": id, "date": ts.isoformat(), "type": tipo})
+
+    # Subir los datos a la base de datos
+    response = supabase.table("attendances").insert(datos).execute()
+
+    if response.get("status_code") == 201:
+        print("Datos subidos correctamente.")
+    else:
+        print(f"Error al subir los datos: {response.get('error')}")
+
     
 # Ejemplo de uso:
 from datetime import date
@@ -185,7 +207,7 @@ for ts in timestamps_octubre:
     print(ts)
 
 print("Timestamps suplementarios:")
-horas_requeridas = 3.5 # Total de horas extras requeridas
+horas_requeridas = 12 # Total de horas extras requeridas
 dias_timestamps_actualizados = ajustar_horas_suplementarias(timestamps_octubre, horas_requeridas)
 # Imprimir los resultados
 for ts in dias_timestamps_actualizados:
@@ -194,7 +216,7 @@ for ts in dias_timestamps_actualizados:
 print("Timestamps extraordinarios:")
 # Ejemplo de uso extraordinarios:
 dias_disponibles = [5, 11, 12, 19, 26]  # Días específicos
-cantidad_horas = 12  # Total de horas extras requeridas
+cantidad_horas = 20  # Total de horas extras requeridas
 mes = 10  # Octubre
 horarios = horas_extraordinarias(dias_disponibles, cantidad_horas, mes)
 # Imprimir los resultados
@@ -232,3 +254,7 @@ try:
 except Exception as e:
     print("Error al conectar a Supabase:")
     print(e)
+
+id = 2  # ID común para todos los timestamps
+
+subir_timestamps_a_supabase(timestamps_ordenados, id)
