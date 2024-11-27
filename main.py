@@ -179,7 +179,7 @@ def unir_y_ordenar_timestamps(lista1, lista2):
     
     return combinada
 
-def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado):
+def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado, cedula):
     """
     Genera un archivo de Excel con los datos de marcación del empleado.
 
@@ -231,12 +231,27 @@ def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado):
         
         # Obtener el workbook y worksheet para escribir notas adicionales
         workbook = writer.book
-        worksheet = writer.sheets["Marcaciones"]
+        worksheet = workbook.add_worksheet("Marcaciones")
+        writer.sheets["Marcaciones"] = worksheet
+
+        worksheet.write(0, 0, "HORARIO LABORAL DE ZOENETV S.A.")
+        worksheet.write(1, 0, "RUC: 1792612454001")
+        worksheet.write(2, 0, f"MES: {mes.upper()} {anio}")
+        worksheet.write(3, 0, f"EMPLEADO: {nombre_empleado}")
+        worksheet.write(4, 0, f"CEDULA: {cedula}")
+
+        # Escribir el DataFrame debajo del encabezado
+        df_start_row = 6  # La tabla comienza en la fila 7 (índice base 0)
+        for col_num, column_title in enumerate(df.columns):
+            worksheet.write(df_start_row - 1, col_num, column_title)  # Escribir nombres de columnas
+        for row_num, row_data in enumerate(df.values.tolist()):
+            for col_num, cell_data in enumerate(row_data):
+                worksheet.write(row_num + df_start_row, col_num, cell_data)
 
         # Añadir secciones de firma al final
         max_row = len(df) + 3
         worksheet.write(max_row, 0, "Firma del Empleado:")
-        worksheet.write(max_row + 2, 0, "Firma de Control:")
+        worksheet.write(max_row + 2, 0, "Empleado")
 
     print(f"Archivo Excel generado: {nombre_archivo}")
     return nombre_archivo
@@ -266,6 +281,7 @@ def subir_timestamps_a_supabase(timestamps, id):
     
 # Ejemplo de uso:
 nombre = input("Ingrese nombre del empleado: ")
+cedula = input("Ingrese la cédula del empleado: ")
 id_empleado = input("Ingrese id del empleado: ")
 departamento = input("Ingrese departamento del empleado: ")
 
@@ -312,7 +328,7 @@ for ts in timestamps_ordenados:
     print(ts)
 
 #generar excel
-generar_excel(timestamps_ordenados, nombre, departamento, id_empleado)
+generar_excel(timestamps_ordenados, nombre, departamento, id_empleado, cedula)
 
 '''
 # Cargar variables de entorno
