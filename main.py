@@ -250,8 +250,10 @@ def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado, 
 
         # Añadir secciones de firma al final
         max_row = len(df) + 3
+        worksheet.write(max_row, 5, "Firma de control:")
+        worksheet.write(max_row + 2, 5, "TALENTO HUMANO" )
         worksheet.write(max_row, 0, "Firma del Empleado:")
-        worksheet.write(max_row + 2, 0, "Empleado")
+        worksheet.write(max_row + 2, 0, nombre_empleado )
 
     print(f"Archivo Excel generado: {nombre_archivo}")
     return nombre_archivo
