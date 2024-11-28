@@ -180,6 +180,7 @@ def unir_y_ordenar_timestamps(lista1, lista2):
     return combinada
 
 def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado, cedula):
+
     """
     Genera un archivo de Excel con los datos de marcación del empleado.
 
@@ -195,14 +196,14 @@ def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado, 
     # Obtener el mes y año del primer timestamp (asumiendo todos son del mismo mes)
     if not lista_timestamps:
         raise ValueError("La lista de timestamps está vacía.")
-    mes = lista_timestamps[0].strftime("%B").upper()
+    mes = lista_timestamps[0].strftime("%B").capitalize()
     anio = lista_timestamps[0].year
 
     # Crear encabezado y nombre del archivo
-    encabezado = f"{nombre_empleado.replace(' ', '_')}_{mes}_{anio}"
+    encabezado = f"{nombre_empleado.replace(' ', '_')}_{mes.upper()}_{anio}"
     nombre_archivo = f"{encabezado}.xlsx"
 
-    # Generar las columnas
+    # Generar los datos de la tabla
     datos = []
     for i, timestamp in enumerate(lista_timestamps):
         fecha = timestamp.strftime("%Y-%m-%d")
@@ -221,39 +222,56 @@ def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado, 
             "Tipo de marcacion": tipo
         })
 
-    # Convertir los datos a un DataFrame
-    df = pd.DataFrame(datos)
-
     # Crear el Excel
     with pd.ExcelWriter(nombre_archivo, engine="xlsxwriter") as writer:
-        # Escribir el DataFrame al archivo
-        df.to_excel(writer, index=False, sheet_name="Marcaciones")
-        
-        # Obtener el workbook y worksheet para escribir notas adicionales
+        # Obtener el workbook y worksheet
         workbook = writer.book
         worksheet = workbook.add_worksheet("Marcaciones")
         writer.sheets["Marcaciones"] = worksheet
 
-        worksheet.write(0, 0, "HORARIO LABORAL DE ZOENETV S.A.")
-        worksheet.write(1, 0, "RUC: 1792612454001")
-        worksheet.write(2, 0, f"MES: {mes.upper()} {anio}")
-        worksheet.write(3, 0, f"EMPLEADO: {nombre_empleado}")
-        worksheet.write(4, 0, f"CEDULA: {cedula}")
+        # Filas adicionales en la columna "A"
+        filas_adicionales = [
+            "HORARIO LABORAL DE ZOENETV S.A.",
+            "RUC: 1792612454001",
+            f"MES: {mes.upper()} {anio}",
+            f"EMPLEADO: {nombre_empleado}",
+            f"CÉDULA: {cedula}",
+            f"DEPARTAMENTO: {departamento.upper()}"
+        ]
 
-        # Escribir el DataFrame debajo del encabezado
-        df_start_row = 6  # La tabla comienza en la fila 7 (índice base 0)
-        for col_num, column_title in enumerate(df.columns):
-            worksheet.write(df_start_row - 1, col_num, column_title)  # Escribir nombres de columnas
-        for row_num, row_data in enumerate(df.values.tolist()):
-            for col_num, cell_data in enumerate(row_data):
-                worksheet.write(row_num + df_start_row, col_num, cell_data)
+        # Escribir las filas adicionales
+        for row_num, texto in enumerate(filas_adicionales):
+            worksheet.write(row_num, 0, texto)  # Escribir en la columna "A"
+
+        # Calcular la fila inicial de la tabla
+        inicio_tabla = len(filas_adicionales) + 2  # Dejar 1 fila en blanco entre las filas adicionales y la tabla
+
+        # Escribir encabezados de la tabla
+        columnas = [
+            "ID", "Nombre del empleado", "Nombre de la empresa",
+            "Departamento", "Día", "Fecha", "Hora de marcación", "Tipo de marcación"
+        ]
+        for col_num, column_title in enumerate(columnas):
+            worksheet.write(inicio_tabla, col_num, column_title)
+
+        # Escribir los datos de la tabla
+        for row_num, fila in enumerate(datos, start=inicio_tabla + 1):  # Datos a partir de la fila siguiente a los encabezados
+            worksheet.write(row_num, 0, fila["ID"])
+            worksheet.write(row_num, 1, fila["Nombre del empleado"])
+            worksheet.write(row_num, 2, fila["Nombre de la empresa"])
+            worksheet.write(row_num, 3, fila["Departamento"])
+            worksheet.write(row_num, 4, fila["Día"])
+            worksheet.write(row_num, 5, fila["Fecha"])
+            worksheet.write(row_num, 6, fila["Hora de marcación"])
+            worksheet.write(row_num, 7, fila["Tipo de marcación"])
 
         # Añadir secciones de firma al final
-        max_row = len(df) + 3
-        worksheet.write(max_row, 5, "Firma de control:")
-        worksheet.write(max_row + 2, 5, "TALENTO HUMANO" )
-        worksheet.write(max_row, 0, "Firma del Empleado:")
-        worksheet.write(max_row + 2, 0, nombre_empleado )
+        max_row = len(datos) + inicio_tabla + 2
+        worksheet.write(max_row, 1, "Firma del Empleado:")
+        worksheet.write(max_row + 4, 1, nombre_empleado)
+        worksheet.write(max_row + 5, 1, cedula)
+        worksheet.write(max_row, 5, "Firma del Control:")
+        worksheet.write(max_row + 4, 5, "Analista de TTHH")
 
     print(f"Archivo Excel generado: {nombre_archivo}")
     return nombre_archivo
