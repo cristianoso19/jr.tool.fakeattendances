@@ -130,11 +130,12 @@ def calcula_horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
     timestamps = []
     horas_restantes = cantidad_horas
     for dia in dias_disponibles:
+        day = int(dia)
         if horas_restantes <= 0:
             break
 
         # Generar horarios para el día
-        fecha = datetime(year, mes, dia)
+        fecha = datetime(year, mes, day)
 
         # Entrada
         entrada = fecha.replace(hour=9, minute=0, second=0, microsecond=0)
@@ -215,11 +216,11 @@ def generar_excel(lista_timestamps, nombre_empleado, departamento, id_empleado, 
             "ID": id_empleado,
             "Nombre del empleado": nombre_empleado,
             "Nombre de la empresa": "ZOENETV S.A.",
-            "DEPARTAMENTO": departamento,
+            "Departamento": departamento,
             "Día": dia,
             "Fecha": fecha,
-            "Hora de marcacion": hora,
-            "Tipo de marcacion": tipo
+            "Hora de marcación": hora,
+            "Tipo de marcación": tipo
         })
 
     # Crear el Excel
@@ -320,23 +321,23 @@ fechas_a_evitar = [date(2024, mes, diaext) for diaext in dias_extraordinarios]
 
 print("Timestamps generados:")
 timestamps_generados = generar_timestamps(mes, fechas_a_evitar)
-for ts in timestamps_generados:
-    print(ts)
+# for ts in timestamps_generados:
+#     print(ts)
 
 print("Timestamps suplementarios:")
 dias_timestamps_actualizados = ajustar_horas_suplementarias(timestamps_generados, horas_suplementarias)
 # Imprimir los resultados
-for ts in dias_timestamps_actualizados:
-    print(ts)
+# for ts in dias_timestamps_actualizados:
+#     print(ts)
 
 print("Timestamps extraordinarios:")
 # Ejemplo de uso extraordinarios:
 #dias_disponibles = [5, 11, 12, 19, 26]  # Días específicos
 #cantidad_horas = 20  # Total de horas extras requeridas
-horarios = calcula_horas_extraordinarias(dias_extraordinarias, horas_extraordinarias, mes)
+horarios = calcula_horas_extraordinarias(dias_extraordinarios, horas_extraordinarias, mes)
 # Imprimir los resultados
-for dia_horarios in horarios:
-    print(dia_horarios)
+# for dia_horarios in horarios:
+#     print(dia_horarios)
     #print([str(h) for h in dia_horarios])
 
 
@@ -344,8 +345,8 @@ print("Timestamps ordenados:")
 timestamps_ordenados = unir_y_ordenar_timestamps(dias_timestamps_actualizados, horarios)
 
 # Imprimir resultados
-for ts in timestamps_ordenados:
-    print(ts)
+# for ts in timestamps_ordenados:
+#     print(ts)
 
 #generar excel
 generar_excel(timestamps_ordenados, nombre, departamento, id_empleado, cedula)
