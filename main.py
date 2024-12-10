@@ -98,7 +98,6 @@ def ajustar_horas_suplementarias(timestamps, horas_requeridas):
 
     return timestamps
 
-
 def calcula_horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
     """
     Crea timestamps para los días específicos del mes proporcionados, con horarios de 9am a 1pm o ajustados a 5 horas
@@ -307,9 +306,9 @@ id_empleado = input("Ingrese id del empleado: ")
 departamento = input("Ingrese departamento del empleado: ")
 
 mes = int(input("Ingrese el mes (1-12): "))
-horas_suplementarias = int(input("Ingrese las horas suplementarias: "))
+horas_suplementarias = float(input("Ingrese las horas suplementarias: "))
 dias_extraordinarias = input("Ingrese los días extraordinarios (seprado por comas): ")
-horas_extraordinarias = int(input("Ingrese las horas extraordinarias: "))
+horas_extraordinarias = float(input("Ingrese las horas extraordinarias: "))
 # Convertir el string de días en una lista de enteros
 dias_extraordinarios = [int(dia.strip()) for dia in dias_extraordinarias.split(",")]
 print(dias_extraordinarios)
