@@ -10,7 +10,7 @@ locale.setlocale(locale.LC_TIME, 'es_ES.utf8')  # Para sistemas Unix/Linux
 
 
 
-def generar_timestamps(mes, fechas_a_evitar=None):
+def generar_timestamps(mes,año, fechas_a_evitar=None):
     """
     Genera cuatro timestamps para cada día laboral de un mes especificado (lunes a viernes),
     excluyendo los días especificados en `fechas_a_evitar`.
@@ -39,7 +39,7 @@ def generar_timestamps(mes, fechas_a_evitar=None):
     fechas_a_evitar = set(fechas_a_evitar)  # Convertir a conjunto para búsqueda eficiente
     
     # Generar las fechas del mes
-    year = datetime.now().year  # Año actual
+    year = año  # Año actual
     start_date = datetime(year, mes, 1)
     end_date = datetime(year, mes + 1, 1) if mes < 12 else datetime(year + 1, 1, 1)
     current_date = start_date
@@ -98,7 +98,7 @@ def ajustar_horas_suplementarias(timestamps, horas_requeridas):
 
     return timestamps
 
-def calcula_horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
+def calcula_horas_extraordinarias(dias_disponibles, cantidad_horas, mes, año):
     """
     Crea timestamps para los días específicos del mes proporcionados, con horarios de 9am a 1pm o ajustados a 5 horas
     si los días no son suficientes para cubrir las horas extras requeridas.
@@ -115,7 +115,7 @@ def calcula_horas_extraordinarias(dias_disponibles, cantidad_horas, mes):
         raise ValueError("La lista de días disponibles no puede estar vacía.")
 
     # Obtener el año actual
-    year = datetime.now().year
+    year = año
 
     # Ordenar los días disponibles
     dias_disponibles = sorted(dias_disponibles)
@@ -304,22 +304,22 @@ nombre = input("Ingrese nombre del empleado: ")
 cedula = input("Ingrese la cédula del empleado: ")
 id_empleado = input("Ingrese id del empleado: ")
 departamento = input("Ingrese departamento del empleado: ")
-
+año = int(input("Ingrese el año: "))
 mes = int(input("Ingrese el mes (1-12): "))
 horas_suplementarias = float(input("Ingrese las horas suplementarias: "))
 dias_extraordinarias = input("Ingrese los días extraordinarios (seprado por comas): ")
-horas_extraordinarias = float(input("Ingrese las horas extraordinarias: "))
+horas_extraordinarias = float(input("Ingrese las horas extraordinarias: ")) 
 # Convertir el string de días en una lista de enteros
 dias_extraordinarios = [int(dia.strip()) for dia in dias_extraordinarias.split(",")]
 print(dias_extraordinarios)
 from datetime import date
 
 # Generar las fechas a evitar
-fechas_a_evitar = [date(2024, mes, diaext) for diaext in dias_extraordinarios]
+fechas_a_evitar = [date(año, mes, diaext) for diaext in dias_extraordinarios]
 
 
 print("Timestamps generados:")
-timestamps_generados = generar_timestamps(mes, fechas_a_evitar)
+timestamps_generados = generar_timestamps(mes, año, fechas_a_evitar)
 # for ts in timestamps_generados:
 #     print(ts)
 
@@ -333,7 +333,7 @@ print("Timestamps extraordinarios:")
 # Ejemplo de uso extraordinarios:
 #dias_disponibles = [5, 11, 12, 19, 26]  # Días específicos
 #cantidad_horas = 20  # Total de horas extras requeridas
-horarios = calcula_horas_extraordinarias(dias_extraordinarios, horas_extraordinarias, mes)
+horarios = calcula_horas_extraordinarias(dias_extraordinarios, horas_extraordinarias, mes, año)
 # Imprimir los resultados
 # for dia_horarios in horarios:
 #     print(dia_horarios)
