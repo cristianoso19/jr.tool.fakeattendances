@@ -16,6 +16,6 @@ pip install -r requirements.txt
 uvicorn app:app --reload
 ```
 
-3. Open `http://localhost:8000` in your browser and fill in the form to generate an Excel report.
+3. Open `http://localhost:8000` in your browser and fill in the form to generate an Excel report. After submitting, your browser will download the generated file.
 
 Environment variables `SUPABASE_URL` and `SUPABASE_KEY` can be provided in a `.env` file if uploading data to Supabase is required.

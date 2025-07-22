@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from datetime import date
 
 from attendance import (
@@ -40,7 +40,7 @@ def index():
     return HTML_FORM
 
 
-@app.post("/generate", response_class=HTMLResponse)
+@app.post("/generate")
 def generate(
     nombre: str = Form(...),
     cedula: str = Form(...),
@@ -59,7 +59,22 @@ def generate(
         base = ajustar_horas_suplementarias(base, horas_sup)
         extras = calcula_horas_extraordinarias(dias_lista, horas_extra, mes, anio) if horas_extra else []
         ordenados = unir_y_ordenar_timestamps(base, extras)
-        archivo = generar_excel(ordenados, nombre, departamento, id_empleado, cedula)
-        return HTMLResponse(f"<h3>Archivo generado: {archivo}</h3>")
+        excel_bytes = generar_excel(
+            ordenados,
+            nombre,
+            departamento,
+            id_empleado,
+            cedula,
+            in_memory=True,
+        )
+        mes_txt = ordenados[0].strftime("%B").capitalize()
+        anio_txt = ordenados[0].year
+        filename = f"{nombre.replace(' ', '_')}_{mes_txt.upper()}_{anio_txt}.xlsx"
+        headers = {"Content-Disposition": f"attachment; filename={filename}"}
+        return Response(
+            excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers=headers,
+        )
     except Exception as exc:
         return HTMLResponse(f"<h3>Error: {exc}</h3>", status_code=400)

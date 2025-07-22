@@ -3,7 +3,8 @@
 import os
 import random
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Union
+from io import BytesIO
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -109,14 +110,27 @@ def unir_y_ordenar_timestamps(lista1: List[datetime], lista2: List[datetime]) ->
     return combinada
 
 
-def generar_excel(lista_timestamps: List[datetime], nombre_empleado: str, departamento: str, id_empleado: int, cedula: str) -> str:
-    """Generate an Excel report with attendance data."""
+def generar_excel(
+    lista_timestamps: List[datetime],
+    nombre_empleado: str,
+    departamento: str,
+    id_empleado: int,
+    cedula: str,
+    *,
+    in_memory: bool = False,
+) -> Union[str, bytes]:
+    """Generate an Excel report with attendance data.
+
+    If ``in_memory`` is ``True`` the Excel file bytes are returned instead of
+    writing a file to disk.
+    """
     if not lista_timestamps:
         raise ValueError("La lista de timestamps está vacía.")
     mes = lista_timestamps[0].strftime("%B").capitalize()
     anio = lista_timestamps[0].year
     encabezado = f"{nombre_empleado.replace(' ', '_')}_{mes.upper()}_{anio}"
     nombre_archivo = f"{encabezado}.xlsx"
+    buffer = BytesIO() if in_memory else nombre_archivo
     datos = []
     for i, ts in enumerate(lista_timestamps):
         fecha = ts.strftime("%Y-%m-%d")
@@ -133,7 +147,7 @@ def generar_excel(lista_timestamps: List[datetime], nombre_empleado: str, depart
             "Hora de marcación": hora,
             "Tipo de marcación": tipo,
         })
-    with pd.ExcelWriter(nombre_archivo, engine="xlsxwriter") as writer:
+    with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
         workbook = writer.book
         worksheet = workbook.add_worksheet("Marcaciones")
         writer.sheets["Marcaciones"] = worksheet
@@ -169,6 +183,9 @@ def generar_excel(lista_timestamps: List[datetime], nombre_empleado: str, depart
         worksheet.write(max_row + 5, 1, cedula)
         worksheet.write(max_row, 5, "Firma del Control:")
         worksheet.write(max_row + 4, 5, "Analista de TTHH")
+    if in_memory:
+        buffer.seek(0)
+        return buffer.getvalue()
     return nombre_archivo
 
 
